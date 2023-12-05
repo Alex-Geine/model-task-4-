@@ -26,6 +26,41 @@ private:
 	CRITICAL_SECTION cs;
 	mat4 mat; // конечная матрица преобразования
 
+	struct ColorTable {
+	public:
+		//массив кисточек
+		SolidBrush** brashes;
+		
+		//размер сетки цветов
+		int Size = 11;
+
+		//массив с пороговыми значениями
+		double *mas;
+
+		ColorTable(double max) {
+			double step = max / (Size - 1);
+
+			mas = new double[Size];
+			brashes = new SolidBrush*[Size - 1];
+			
+			for (int i = 0; i < Size; i++) 
+				mas[i] = i * step;	
+
+			for (int i = 0; i < Size - 1; i++) {
+				Color col(255 *  i / (Size - 1), 0, 255 - 255 * i / (Size - 1));
+				brashes[i] = new SolidBrush(col);
+			}
+		}
+
+		//возвращает указатель на кисть из нужного диапазона
+		SolidBrush* GetBrush(double val) {
+			for (int i = 0; i < Size - 1; i++) {
+				if ((val >= mas[i]) && (val < mas[i + 1]))
+					return brashes[i];
+			}
+		}
+	};
+
 	
 
 	double	R;		//ширина ямы
@@ -36,6 +71,8 @@ private:
 	int IdMax = 1024;	//количество отсчетов времени
 
 	double MaxF;		//максимальное значение на графике пакета
+	double MaxY;		//маскимальное значение по оси Y для пакета
+
 	double MaxFFur;		//максимальное значение на графике спектра
 	double MaxE;		//максимальное значение на графике собственной функции
 	double a;			//левая граница ямы
@@ -43,22 +80,30 @@ private:
 	double f0;			//амплитуда Гауссого купола
 
 	complex<double>** F = NULL;				//массив значений волнового пакета
-	complex<double>** FFur = NULL;			//массив значений спектра
+	complex<double>*** FFur = NULL;			//массив значений спектра
 	vector <pair<double, int>> Energes;		//вектор со значениями собственных значений
 
 	double* X = NULL;		//вектор значений по X
 	double* Y = NULL;		//вектор значений по Y
 	double* f = NULL;		//вектор значений по f
 
+	//вектор со всеми полигонами
+	vector<Poligon*> polig;
+
+	//флаг, отвечающий за создание вектора с полигонами
+	bool poligReady = false;
+
+	//подготавливает данные для отрисовки 2d
+	void PrepareData2d();
+
+	//подготавливает данные для отрисовки 3d
+	void PrepareData3d();
 
 	//очищает список
 	void ClearList();
 
 	//заполняет список
 	void FillList();
-
-	//находит максимальное значения функции
-	void FindMaxF();
 
 	//находит максимальное значения функции фурье
 	void FindMaxFFur();
@@ -73,12 +118,21 @@ private:
 		Controller* This = (Controller*)param;
 		return This->ModelFunk();
 	}
+
+	//функция, которая считает фурье
+	DWORD WINAPI ModelFurie();
+
+	static DWORD WINAPI StaticModelFurie(PVOID param) {
+		Controller* This = (Controller*)param;
+		return This->ModelFurie();
+	}
 	
 public:
 	CListBox* listEnerges;		//указатель на листбокс
 
 	int drawId = 0;		//ид отсчета времени, в который рисуем пакет
-	int drawIdF = 0;	//ид спектра, который рисуем
+	int drawIdFx = 0;	//ид спектра, который рисуем
+	int drawIdFy = 0;	//ид спектра, который рисуем
 	int drawIdE = 0;	//ид собственной функции, которую рисуем
 		
 	void UpdateModel(
@@ -99,14 +153,14 @@ public:
 	//очищает данные
 	void Clear();
 	
-	//запускает отрисовку главного графика6
+	//запускает отрисовку 2d графика
 	void DrawMainGr(LPDRAWITEMSTRUCT Item1);
 
-	//запускает отрисовку 
-	void DrawPhase(LPDRAWITEMSTRUCT Item1);
+	//отрисовывает 3d график
+	void Draw3D(LPDRAWITEMSTRUCT Item1);
 
-	//запускает отрисовку 
-	void DrawPhaseTr(LPDRAWITEMSTRUCT Item1);
+	//отрисовывает спектр
+	void DrawSpectrum(LPDRAWITEMSTRUCT Item1);
 	
 	//запусткает вычисления
 	void StartSolve();	
@@ -114,7 +168,7 @@ public:
 	Controller():mod(new WaveModel) {
 		GdiplusStartupInput si;
 		GdiplusStartup(&token, &si, NULL);
-		mat.rotateY(2);
+		mat.rotateY(1);
 	}
 
 	//деструктор
@@ -133,4 +187,7 @@ public:
 
 	//считает собственные функции по другому отсчеты координаты
 	void GetSF(int id);
+
+	//функция, ждущая отсчетов для фурье
+	void CheckData();
 };

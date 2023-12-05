@@ -57,7 +57,7 @@ Cmodeltask1Dlg::Cmodeltask1Dlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_MODELTASK_1_DIALOG, pParent)
 
 	, n(100)
-	, dt(0.0000001)
+	, dt(0.001)
 	, a(-1)
 	, b(1)
 	, R(2)
@@ -65,10 +65,11 @@ Cmodeltask1Dlg::Cmodeltask1Dlg(CWnd* pParent /*=nullptr*/)
 	, U0(0.1)
 	, gammax(0.5)
 	, asrx(0)
-	, idDraw(12)
+	, idx(50)
 	, asrty(0)
 	, M(100)
 	, gammay(0.5)
+	, idy(50)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -89,10 +90,12 @@ void Cmodeltask1Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT8, gammax);
 	DDX_Control(pDX, IDC_LIST2, listModels);
 	DDX_Text(pDX, IDC_EDIT9, asrx);
-	DDX_Text(pDX, IDC_EDIT10, idDraw);
+	DDX_Text(pDX, IDC_EDIT10, idx);
 	DDX_Text(pDX, IDC_EDIT11, asrty);
 	DDX_Text(pDX, IDC_EDIT13, M);
 	DDX_Text(pDX, IDC_EDIT12, gammay);
+	DDX_Control(pDX, IDC_3D, threedgraph);
+	DDX_Text(pDX, IDC_EDIT14, idy);
 }
 
 BEGIN_MESSAGE_MAP(Cmodeltask1Dlg, CDialogEx)
@@ -145,8 +148,14 @@ BOOL Cmodeltask1Dlg::OnInitDialog()
 
 	// TODO: добавьте дополнительную инициализацию
 	control = new Controller();
+
+	//график с 2д картинкой
 	MainGraph.GetContr(control);
 	MainGraph.drawerID = 1;
+
+	//график с 3d картинкой
+	threedgraph.GetContr(control);
+	threedgraph.drawerID = 2;
 
 	CWnd* m_Parent;
 	m_Parent = GetDesktopWindow();
@@ -154,12 +163,12 @@ BOOL Cmodeltask1Dlg::OnInitDialog()
 	phd = new Phase_D(m_Parent);	
 	phd->Create(IDD_DIALOG1, m_Parent);
 	phd->Phase_Gr.GetContr(control);
-	phd->Phase_Gr.drawerID = 2;
+	phd->Phase_Gr.drawerID = 3;
 
 	por = new Portret(m_Parent);
 	por->Create(IDD_DIALOG2, m_Parent);
 	por->PhasePor.GetContr(control);
-	por->PhasePor.drawerID = 3;
+	por->PhasePor.drawerID = 4;
 
 	
 
@@ -227,10 +236,14 @@ void Cmodeltask1Dlg::OnEnChangeEdit2()
 void Cmodeltask1Dlg::OnTimer(UINT_PTR nIDEvent)
 {		
 	UpdateData();
-	control->drawId = idDraw;
+	
+	control->CheckData();	
 	control->GetData();
 	MainGraph.draw = 1;
 	MainGraph.Invalidate(false);
+
+	threedgraph.draw = 1;
+	threedgraph.Invalidate(false);
 
 	while (PeekMessage(&msg, 0, WM_PAINT, WM_PAINT, PM_REMOVE))
 	{
@@ -300,7 +313,7 @@ void Cmodeltask1Dlg::OnBnClickedButton5()
 		return;
 	}
 	ID = 0;
-	timer = SetTimer(1, 100, 0);
+	timer = SetTimer(1, 50, 0);
 
 	/*for (int i = 0; i < 1024; i++) {
 		control->drawId = i;		
@@ -326,12 +339,13 @@ void Cmodeltask1Dlg::OnBnClickedButton6()
 	
 	UpdateData();
 
-	if ((idDraw < 0) || (idDraw >= n)) {
+	if ((idx < 0) || (idx >= n) || (idy < 0) || (idy >= M)) {
 		MessageBox(L"Id вышло за предел количества точек по X", L"Ошибка!", NULL);
 		return;
 	}
 
-	control->drawIdF = idDraw;
+	control->drawIdFx = idx;
+	control->drawIdFy = idy;
 	phd->GetMes();
 }
 
@@ -339,5 +353,5 @@ void Cmodeltask1Dlg::OnBnClickedButton6()
 void Cmodeltask1Dlg::OnBnClickedButton7()
 {
 	UpdateData();
-	control->GetSF(idDraw);
+	control->GetSF(idx);
 }

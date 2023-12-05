@@ -19,11 +19,13 @@ using namespace std;
 class WaveModel {
 private:
 	
-	//int Id = 1;		//текущий айди времени
+	int index = 0;		//индекс итерации
+	int Id = 1023;		//текущий айди времени
 	int N;		//количество точек по оси x
 	int M;		//количество точек по оси y
-	//int IdMax = 1024;	//количество отсчетов по времени
+	int IdMax = 1024;	//количество отсчетов по времени
 	int SFId;
+	int descrKoef = 20;		//коеффициент, корректирующий частоту дискретизации
 
 
 	double
@@ -59,7 +61,8 @@ private:
 	double* f = NULL;					//значения частотной сетки
 	complex<double>** Fpast = NULL;		//функция пакета в предыдущий момент времени
 	complex<double>** Fnow = NULL;		//функция пакета в настоящий момент времени
-	complex<double>** FFur = NULL;		// спектр функции пакета
+	complex<double>*** FBuf = NULL;		//массив с функциями пакета по времени	
+	
 	vector<pair<double, int>> Energes;	//собственные энергии
 
 	//начальная инициализация алгоритма
@@ -125,14 +128,22 @@ private:
 	//копирует отсчеты функции на текущем шаге в буфер для предыдущего шага
 	void CopyData();
 public:
-	//индекс итерации
-	int index = 0;
+	
+
+	//флаг, отвечающий за готовность произвести фурье
+	bool DataReady = false;
+
+	//флаг, отвечающий за начало рассчета фурье
+	bool FurStart = false;
+
+	//функция, которая добавляет в буфер новый отсчет времени
+	bool PutData();
 
 	//Отдает указатель на F()
 	complex<double>** GetF();
 
 	//Отдает указатель на FFur()
-	complex<double>** GetFFur();
+	complex<double>*** GetFFur();
 
 	//Отдает указатель на вектор с энергиями
 	vector<pair<double, int>> GetEnerges();

@@ -31,9 +31,9 @@ void Drawer::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 		if (drawerID == 1)
 			control->DrawMainGr(lpDrawItemStruct);
 		if (drawerID == 2)
-			control->DrawPhase(lpDrawItemStruct);
+			control->Draw3D(lpDrawItemStruct);
 		if(drawerID == 3)
-			control->DrawPhaseTr(lpDrawItemStruct);
+			control->DrawSpectrum(lpDrawItemStruct);
 	}	
 	
 }

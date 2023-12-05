@@ -20,6 +20,13 @@ void WaveModel::FindWave() {
 
 		//копирование данных
 		CopyData();
+		
+		//сохранение данных для Фурье
+		if (!(index % descrKoef)) {
+			PutData();
+			index = 0;
+		}
+			
 	}
 	
 }
@@ -30,14 +37,11 @@ void WaveModel::InitData() {
 	//создание массивов
 	X = new double[N];
 	Y = new double[M];
-	//f = new double[IdMax];
+	f = new double[IdMax];
 	Fpast = new complex<double>* [N];
 	Fnow = new complex<double>*[N];
-	//FFur = new complex<double>* [N];
+	FBuf = new complex<double>**[IdMax];	
 	
-	int koefSize = N;
-	
-
 	A = new complex<double>*[N - 1];	
 	B = new complex<double>*[N - 1];
 	C = new complex<double>*[N - 1];
@@ -69,10 +73,10 @@ void WaveModel::InitData() {
 		Y[i] = x0 + i * stepY;
 
 	//инициализация частотной сетки
-	//double stepF = 1 / (dt * IdMax);
+	double stepF = 1 / (dt * descrKoef * IdMax);
 
-	//for (int i = 0; i < IdMax; i++)
-	//	f[i] = i * stepF;	
+	for (int i = 0; i < IdMax; i++)
+		f[i] = i * stepF;	
 
 	//отсчеты пакета
 	for (int i = 0; i < N; i++) {
@@ -87,6 +91,15 @@ void WaveModel::InitData() {
 			Fnow[i][j] = { 0,0 };
 		}
 	}
+	
+	for (int k = 0; k < IdMax; k++) {
+		FBuf[k] = new complex<double>*[N];
+		//отсчеты буфера пакета
+		for (int i = 0; i < N; i++) {
+			FBuf[k][i] = new complex<double>[M];
+		}
+	}
+	  
 }
 
 //копирует отсчеты функции на текущем шаге в буфер для предыдущего шага
@@ -137,7 +150,7 @@ void WaveModel::FindABCD1() {
 			A[i - 1][j - 1] = - tau / (2 * stepX * stepX);
 			B[i - 1][j - 1] = - tau / (2 * stepX * stepX);
 			C[i - 1][j - 1] = 1. + tau * U(X[i], Y[j]) / 2. + tau / (stepX * stepX) ;
-			D[i - 1][j - 1] = Fpast[i][j] + tau / 2. * (DFX(i,j, FIRSTHALF) + 2. * DFY(i,j,FIRSTHALF) - U(X[i], Y[j]) * Fpast[i][j]);
+			D[i - 1][j - 1] = Fpast[i][j] + tau / 2. * (DFX(i,j, FIRSTHALF) + 2. * DFY(i,j,FIRSTHALF) - U(X[i], Y[j])) * Fpast[i][j];
 		}
 	}	
 }
@@ -150,7 +163,7 @@ void WaveModel::FindABCD2() {
 			A[i - 1][j - 1] = -tau / (2 * stepY * stepY);
 			B[i - 1][j - 1] = -tau / (2 * stepY * stepY);
 			C[i - 1][j - 1] = 1. + tau * U(X[i], Y[j]) / 2. + tau / (stepY * stepY);
-			D[i - 1][j - 1] = Fnow[i][j] + tau / 2. * ( 2. * DFX(i, j, SECONDHALF) + DFY(i, j, SECONDHALF) - U(X[i], Y[j]) * Fnow[i][j]);
+			D[i - 1][j - 1] = Fnow[i][j] + tau / 2. * ( 2. * DFX(i, j, SECONDHALF) + DFY(i, j, SECONDHALF) - U(X[i], Y[j]) ) * Fnow[i][j];
 		}
 	}
 }
@@ -213,13 +226,13 @@ void WaveModel::Update(int N, int M,  double dt, double R, double a, double b, d
 }
 
 //Быстрое Фурье
-bool  WaveModel::FFT(int Ft_Flag,complex<double>* data)
+bool  WaveModel::FFT(int Ft_Flag, complex<double>* data)
 {
 	double* Rdat = NULL, * Idat = NULL;
 	ConvertComplex(data, &Rdat, &Idat);
 
-	int LogN = 0;// log2(IdMax);
-	int Nn = 0;// IdMax;
+	int LogN = log2(IdMax);
+	int Nn = IdMax;
 
 	// parameters error check:
 	if ((Rdat == NULL) || (Idat == NULL))                  return false;
@@ -324,18 +337,24 @@ bool  WaveModel::FFT(int Ft_Flag,complex<double>* data)
 }
 
 //нахождение всех спектров
-void WaveModel::FindSpectrum() {
-	//for (int i = 0; i < N; i++) {
-	//	FFur[i] = new complex<double>[IdMax];
-	//	for (int j = 0; j < IdMax; j++)
-	//		FFur[i][j] = F[IdMax - j - 1][i];
+void WaveModel::FindSpectrum() {  
+	complex<double>* data = new complex<double>[IdMax];
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < M; j++) {
+			
+			for (int k = 0; k < IdMax; k++)
+				data[k] = FBuf[k][i][j];
 
-	//	//берем фурье
-	//	FFT(FT_DIRECT, FFur[i]);
+			//берем фурье
+			FFT(FT_DIRECT, data);
 
-	//	for (int j = 0; j < IdMax; j++)
-	//		cout << FFur[i][j] << endl;
-	//}
+			for (int k = 0; k < IdMax; k++)
+				FBuf[k][i][j] = data[k];
+
+		}		
+	}
+
+	delete[] data;
 }
 
 //находит пики в спектрограмме
@@ -383,52 +402,53 @@ void WaveModel::FindPicks2() {
 
 //находит максимальное значение, начиная с некоторого id
 void WaveModel::FindMax(int ida, int idb, double& max, int& id) {
-	max = abs(FFur[SFId][ida]);
+	/*max = abs(FFur[SFId][ida]);
 	for (int i = ida + 1; i < idb; i++) {
 		if (max < abs(FFur[SFId][i])) {
 			max = abs(FFur[SFId][i]);
 			id = i;
 		}
-	}
+	}*/
 }
 //находит максимальное значение, начиная с некоторого id
 bool WaveModel::FindMax(int ida, int idb, double& max, int& id, double min) {
-	max = abs(FFur[int(N / 2)][ida]);
-	bool res = false;
-	for (int i = ida + 1; i < idb; i++) {
-		if ((max < abs(FFur[int(N / 2)][i])) && (abs(FFur[int(N / 2)][i]) > min)) {
-			max = abs(FFur[int(N / 2)][i]);
-			id = i;
-			res = true;
-		}
-	}
-	return res;
+	//max = abs(FFur[int(N / 2)][ida]);
+	//bool res = false;
+	//for (int i = ida + 1; i < idb; i++) {
+	//	if ((max < abs(FFur[int(N / 2)][i])) && (abs(FFur[int(N / 2)][i]) > min)) {
+	//		max = abs(FFur[int(N / 2)][i]);
+	//		id = i;
+	//		res = true;
+	//	}
+	//}
+	//return res;
+	return 1;
 }
 //находит отрезок со следующим пиком
 void WaveModel::FindId(double min, int& ida, int idb) {
-	for (int i = ida; i < idb; i++) {
-		if (abs(FFur[int(N / 2)][i]) <= min) {
-			ida = i;
-			return;
-		}		
-	}
+	//for (int i = ida; i < idb; i++) {
+	//	if (abs(FFur[int(N / 2)][i]) <= min) {
+	//		ida = i;
+	//		return;
+	//	}		
+	//}
 }
 
 //нахождение собственных функций частицы
 void WaveModel::FindFunc() {
 	//находим спектр
 	FindSpectrum();
-	FindPicks2();
+	//FindPicks2();
 }
 
-//Отдает указатель на F(id)
+//Отдает указатель на F
 complex<double>** WaveModel::GetF() {
 	return Fpast;
 }
 
-//Отдает указатель на FFur(id)
-complex<double>** WaveModel::GetFFur() {
-	return FFur;
+//Отдает указатель на FFur
+complex<double>*** WaveModel::GetFFur() {
+	return FBuf;
 }
 
 //отдает указатель на X
@@ -472,18 +492,18 @@ void WaveModel::Reset()
 
 //конвертирует из complex в double
 void WaveModel::ConvertComplex(complex<double>* comp, double** RDat, double** IDat) {
-	/**RDat = new double[IdMax];
+	*RDat = new double[IdMax];
 	*IDat = new double[IdMax];
 	for (int i = 0; i < IdMax; i++) {
 		(*RDat)[i] = comp[i].real();
 		(*IDat)[i] = comp[i].imag();
-	}*/
+	}
 }
 
 //конвертирует из double в complex
 void WaveModel::ConvertDouble(complex<double>** comp, double* RDat, double* IDat) {
-	/*for (int i = 0; i < IdMax; i++)
-		(*comp)[i] = complex<double>(RDat[i], IDat[i]);*/
+	for (int i = 0; i < IdMax; i++)
+		(*comp)[i] = complex<double>(RDat[i], IDat[i]);
 }
 
 //Отдает ссылку на вектор с энергиями
@@ -496,4 +516,23 @@ void WaveModel::FindSF(int id) {
 	Energes.clear();
 	SFId = id;
 	FindPicks2();
+}
+
+//функция, которая добавляет в буфер новый отсчет времени
+bool WaveModel::PutData() {
+	if (DataReady)
+		return 1;
+	else {
+		for (int i = 0; i < N; i++)
+			for (int j = 0; j < M; j++)
+				FBuf[Id][i][j] = Fpast[i][j];
+		Id--;
+		if (Id == 0) {
+			MessageBox(NULL,L"Данные для фурье готовы! Запуск нахождения спектра...", L"", NULL);
+			DataReady = true;
+			return 1;
+		}
+		else
+			return 0;
+	}
 }

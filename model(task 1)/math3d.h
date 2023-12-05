@@ -105,6 +105,16 @@ namespace math3d
 
 		// Получить ссылку на координату Z
 		float& z() const { return (float&)_vector[2]; }
+
+		void Setz(float z) {
+			_vector[2] = z;
+		}
+		void Setx(float x) {
+			_vector[0] = x;
+		}
+		void Sety(float y) {
+			_vector[1] = y;
+		}
 	};
 }
 

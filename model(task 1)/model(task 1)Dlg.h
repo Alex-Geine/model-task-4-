@@ -64,7 +64,8 @@ public:
 	double gammay;	//дисперсия ямы по оси Y
 	double asrx;	//среднее отклонение по оси X
 	double asrty;	//среднее отклонение по оси Y
-	int idDraw;		//переменная, отвечает за id отрисовки спектра 
+	int idx;		//переменная, отвечает за id по x спектра
+	int idy;		//переменная, отвечает за id по y спектра
 
 	int ID = 0;
 
@@ -75,5 +76,7 @@ public:
 	
 	afx_msg void OnBnClickedButton6();
 	afx_msg void OnBnClickedButton7();
+	
+	Drawer threedgraph;
 	
 };
