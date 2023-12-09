@@ -70,6 +70,7 @@ Cmodeltask1Dlg::Cmodeltask1Dlg(CWnd* pParent /*=nullptr*/)
 	, M(100)
 	, gammay(0.5)
 	, idy(50)
+	, Scalefd(20)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -96,6 +97,7 @@ void Cmodeltask1Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT12, gammay);
 	DDX_Control(pDX, IDC_3D, threedgraph);
 	DDX_Text(pDX, IDC_EDIT14, idy);
+	DDX_Text(pDX, IDC_EDIT15, Scalefd);
 }
 
 BEGIN_MESSAGE_MAP(Cmodeltask1Dlg, CDialogEx)
@@ -254,25 +256,24 @@ void Cmodeltask1Dlg::OnTimer(UINT_PTR nIDEvent)
 	CDialogEx::OnTimer(nIDEvent);
 }
 
-//фазовая траектория
+//окно спектра
 void Cmodeltask1Dlg::OnBnClickedButton1()
 {	
 	phd->ShowWindow(1);
 }
 
+//окно Собственных функций	 
+void Cmodeltask1Dlg::OnBnClickedButton2()
+{
+	por->ShowWindow(1);
+}
 
 void CAboutDlg::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 }
 
-//фазовый портрет
-void Cmodeltask1Dlg::OnBnClickedButton2()
-{
-	por->ShowWindow(1);	
-}
-
-//маятники
+//Отрисовывает график СФ
 void Cmodeltask1Dlg::OnBnClickedButton3()
 {
 	if (!control->DataReady()) {
@@ -286,6 +287,7 @@ void Cmodeltask1Dlg::OnBnClickedButton3()
 //Посчитать значения
 void Cmodeltask1Dlg::OnBnClickedButton4()
 {
+	KillTimer(timer);
 	UpdateData();
 
 	//проверки на корректность значений
@@ -295,7 +297,8 @@ void Cmodeltask1Dlg::OnBnClickedButton4()
 	}	
 	
 	control->Clear();
-	control->UpdateModel(n, M, dt, a, b, R, f0, U0, gammax, gammay, asrx, asrty);
+	control->CreateModel();
+	control->UpdateModel(n, M, dt, a, b, R, f0, U0, gammax, gammay, asrx, asrty, Scalefd);
 	control->StartSolve();
 
 	timer = SetTimer(1, 10, 0);
@@ -305,28 +308,11 @@ void Cmodeltask1Dlg::OnEnChangeEdit4()
 {
 }
 
-//нарисовать
+//Удвлить модель
 void Cmodeltask1Dlg::OnBnClickedButton5()
 {
-	if (!control->DataReady()) {
-		MessageBox(L"Нет данных!", L"Ошибка!", NULL);
-		return;
-	}
-	ID = 0;
-	timer = SetTimer(1, 50, 0);
-
-	/*for (int i = 0; i < 1024; i++) {
-		control->drawId = i;		
-		MainGraph.draw = 1;
-		MainGraph.Invalidate(false);
-
-		while (PeekMessage(&msg, 0, WM_PAINT, WM_PAINT, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}*/
-	
+	control->Clear();
+		
 }
 
 //нарисовать спектр
@@ -353,5 +339,5 @@ void Cmodeltask1Dlg::OnBnClickedButton6()
 void Cmodeltask1Dlg::OnBnClickedButton7()
 {
 	UpdateData();
-	control->GetSF(idx);
+	control->GetSF(idx, idy);
 }

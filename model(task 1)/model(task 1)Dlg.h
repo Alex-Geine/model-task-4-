@@ -79,4 +79,5 @@ public:
 	
 	Drawer threedgraph;
 	
+	double Scalefd;
 };

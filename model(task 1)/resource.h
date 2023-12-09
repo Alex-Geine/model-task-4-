@@ -44,6 +44,7 @@
 #define IDC_EDIT13                      1037
 #define IDC_3D                          1038
 #define IDC_EDIT14                      1039
+#define IDC_EDIT15                      1040
 
 // Next default values for new objects
 // 

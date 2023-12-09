@@ -21,7 +21,7 @@ struct Poligon
 class Controller {	
 private:	
 	ULONG_PTR token;
-	WaveModel* mod;
+	WaveModel* mod = nullptr;
 	HANDLE TREAD;
 	CRITICAL_SECTION cs;
 	mat4 mat; // конечная матрица преобразования
@@ -70,27 +70,38 @@ private:
 	int M;				//количество точек по Y
 	int IdMax = 1024;	//количество отсчетов времени
 
-	double MaxF;		//максимальное значение на графике пакета
-	double MaxY;		//маскимальное значение по оси Y для пакета
+	double MaxF;		//максимальное значение на графике пакета для 3д графика
+	double MaxY;		//маскимальное значение по оси Y для пакета	для 3д графика
+
+	double Maxf0;		//максимальное значение интенсивности на 2д графике
+
+	double MaxSF;		//максимальное значение интенсивности на графике собственных функций
 
 	double MaxFFur;		//максимальное значение на графике спектра
 	double MaxE;		//максимальное значение на графике собственной функции
 	double a;			//левая граница ямы
 	double b;			//правая граница ямы
 	double f0;			//амплитуда Гауссого купола
+	double Scalefd;		//маштабирование частоты дискретизации
 
 	complex<double>** F = NULL;				//массив значений волнового пакета
 	complex<double>*** FFur = NULL;			//массив значений спектра
 	vector <pair<double, int>> Energes;		//вектор со значениями собственных значений
+	
+	vector <pair<PointF, PointF>> Isolines[11];		//массив с изолиниями
+	vector <pair<PointF, PointF>> IsolinesSF[11];	//массив с изолиниями для собственных функций
 
 	double* X = NULL;		//вектор значений по X
 	double* Y = NULL;		//вектор значений по Y
 	double* f = NULL;		//вектор значений по f
 
-	//вектор со всеми полигонами
+	//вектор со всеми полигонами для 2d и 3d
 	vector<Poligon*> polig;
 
-	//флаг, отвечающий за создание вектора с полигонами
+	//вектор со всеми полигонами для собственных функций
+	vector<Poligon*> poligSF;
+
+	//флаг, отвечающий за создание вектора с полигонами для 2d и 3d
 	bool poligReady = false;
 
 	//подготавливает данные для отрисовки 2d
@@ -99,6 +110,18 @@ private:
 	//подготавливает данные для отрисовки 3d
 	void PrepareData3d();
 
+	//подготавливает данные для отрисовки собственных функций
+	void PrepareDataSF();
+
+	//находит изолинии
+	void MakeIsolines();
+
+	//находит изолинии на графике собственных функций
+	void MakeIsolinesSF();
+
+	//проверяет полигон для поиска изолинии
+	bool CheckPoligon(double T, pair<PointF, PointF> & buf, Poligon pol);
+
 	//очищает список
 	void ClearList();
 
@@ -106,10 +129,7 @@ private:
 	void FillList();
 
 	//находит максимальное значения функции фурье
-	void FindMaxFFur();
-
-	//находит максимальное значение собственной функции
-	void FindMaxEn();	
+	void FindMaxFFur();		
 
 	//функция, которая работает в потоке с моделью
 	DWORD WINAPI ModelFunk();
@@ -147,7 +167,8 @@ public:
 			double gammax,	//дисперсия ямы по оси X
 			double gammay,	//дисперсия ямы по оси Y
 			double asrx,	//среднее отклонение по оси X
-			double asrty	//среднее отклонение по оси Y
+			double asrty,	//среднее отклонение по оси Y
+			double Scalefd	//маштабирование частоты дискретизации
 	);
 		
 	//очищает данные
@@ -161,11 +182,14 @@ public:
 
 	//отрисовывает спектр
 	void DrawSpectrum(LPDRAWITEMSTRUCT Item1);
+
+	//отрисовывает Собствунную функцию
+	void DrawSF(LPDRAWITEMSTRUCT Item1);
 	
 	//запусткает вычисления
 	void StartSolve();	
 
-	Controller():mod(new WaveModel) {
+	Controller(){
 		GdiplusStartupInput si;
 		GdiplusStartup(&token, &si, NULL);
 		mat.rotateY(1);
@@ -185,9 +209,15 @@ public:
 	//отвечает, есть ли данные для отрисовки
 	bool DataReady();
 
-	//считает собственные функции по другому отсчеты координаты
-	void GetSF(int id);
+	//считает собственные функции по отсчетам координаты
+	void GetSF(int idx, int idy);
 
 	//функция, ждущая отсчетов для фурье
 	void CheckData();
+
+	//функция, создающая новыую модель
+	void CreateModel() {
+		if (mod == nullptr)
+			mod = new WaveModel();
+	}
 };

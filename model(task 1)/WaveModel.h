@@ -24,8 +24,9 @@ private:
 	int N;		//количество точек по оси x
 	int M;		//количество точек по оси y
 	int IdMax = 1024;	//количество отсчетов по времени
-	int SFId;
-	int descrKoef = 20;		//коеффициент, корректирующий частоту дискретизации
+	int SFIdx;			//id отсчета по x, в котором ищутся СФ
+	int SFIdy;			//id отсчета по y, в котором ищутся СФ
+	double Scalefd;		//коеффициент, корректирующий частоту дискретизации
 
 
 	double
@@ -167,8 +168,8 @@ public:
 	void FindFunc();
 
 	//апдейтит параметры модели
-	void Update(int N, int M, double dt, double R, double a, double b, double U0, double f0, double asrx, double asry, double gammax, double gammay);
+	void Update(int N, int M, double dt, double R, double a, double b, double U0, double f0, double asrx, double asry, double gammax, double gammay, double Scalefd);
 
-	//находит собственные функции в конкретном 
-	void FindSF(int id);
+	//находит собственные функции в конкретной точке 
+	void FindSF(int idx, int idy);
 };

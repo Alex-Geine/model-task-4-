@@ -30,10 +30,12 @@ void Drawer::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	if (draw) {
 		if (drawerID == 1)
 			control->DrawMainGr(lpDrawItemStruct);
-		if (drawerID == 2)
+		else if (drawerID == 2)
 			control->Draw3D(lpDrawItemStruct);
-		if(drawerID == 3)
+		else if(drawerID == 3)
 			control->DrawSpectrum(lpDrawItemStruct);
+		else if (drawerID == 4)
+			control->DrawSF(lpDrawItemStruct);
 	}	
 	
 }

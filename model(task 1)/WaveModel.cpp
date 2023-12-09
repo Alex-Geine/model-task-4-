@@ -22,7 +22,7 @@ void WaveModel::FindWave() {
 		CopyData();
 		
 		//сохранение данных для Фурье
-		if (!(index % descrKoef)) {
+		if (!(index % (int)Scalefd)) {
 			PutData();
 			index = 0;
 		}
@@ -73,7 +73,7 @@ void WaveModel::InitData() {
 		Y[i] = x0 + i * stepY;
 
 	//инициализация частотной сетки
-	double stepF = 1 / (dt * descrKoef * IdMax);
+	double stepF = 1 / (dt * Scalefd * IdMax);
 
 	for (int i = 0; i < IdMax; i++)
 		f[i] = i * stepF;	
@@ -209,7 +209,7 @@ void WaveModel::BackwardMethod2() {
 }
 
 //апдейтит параметры модели
-void WaveModel::Update(int N, int M,  double dt, double R, double a, double b, double U0, double f0, double asrx, double asry, double gammax, double gammay) {
+void WaveModel::Update(int N, int M, double dt, double R, double a, double b, double U0, double f0, double asrx, double asry, double gammax, double gammay, double Scalefd) {
 	this->N = N;
 	this->M = M;
 	this->dt = dt;
@@ -222,6 +222,7 @@ void WaveModel::Update(int N, int M,  double dt, double R, double a, double b, d
 	this->aSry = asry;
 	this->gammax = gammax;
 	this->gammay = gammay;
+	this->Scalefd = Scalefd;
 	//this->SFId = N / 2;
 }
 
@@ -384,33 +385,35 @@ void WaveModel::FindPicks() {
 
 //вторая версия поиска пиков
 void WaveModel::FindPicks2() {
-	/*int id;
+	int id;
 	double max;
 	FindMax(0, IdMax, max, id);
+	Energes.push_back({ max, id });
 
 	max *= 0.05;
-	for (int i = 1; i < 1024; i++) {
-		double left = abs(FFur[SFId][i - 1]);
-		double cent = abs(FFur[SFId][i]);
-		double right = abs(FFur[SFId][i + 1]);
+	for (int i = 1; i < 1023; i++) {
+		double left = abs(FBuf[i - 1][SFIdx][SFIdy]);
+		double cent = abs(FBuf[i][SFIdx][SFIdy]);
+		double right = abs(FBuf[i + 1][SFIdx][SFIdy]);
 
 		if ((cent > left) && (cent > right) && (cent>=max)) {
 			Energes.push_back({ cent, i});
 		}
-	}*/
+	}
 }
 
 //находит максимальное значение, начиная с некоторого id
 void WaveModel::FindMax(int ida, int idb, double& max, int& id) {
-	/*max = abs(FFur[SFId][ida]);
+	max = abs(FBuf[ida][SFIdx][SFIdy]);
 	for (int i = ida + 1; i < idb; i++) {
-		if (max < abs(FFur[SFId][i])) {
-			max = abs(FFur[SFId][i]);
+		if (max < abs(FBuf[i][SFIdx][SFIdy])) {
+			max = abs(FBuf[i][SFIdx][SFIdy]);
 			id = i;
 		}
-	}*/
+	}
 }
-//находит максимальное значение, начиная с некоторого id
+
+//находит максимальное значение, начиная с некоторого id (не используется)
 bool WaveModel::FindMax(int ida, int idb, double& max, int& id, double min) {
 	//max = abs(FFur[int(N / 2)][ida]);
 	//bool res = false;
@@ -424,6 +427,7 @@ bool WaveModel::FindMax(int ida, int idb, double& max, int& id, double min) {
 	//return res;
 	return 1;
 }
+
 //находит отрезок со следующим пиком
 void WaveModel::FindId(double min, int& ida, int idb) {
 	//for (int i = ida; i < idb; i++) {
@@ -437,8 +441,7 @@ void WaveModel::FindId(double min, int& ida, int idb) {
 //нахождение собственных функций частицы
 void WaveModel::FindFunc() {
 	//находим спектр
-	FindSpectrum();
-	//FindPicks2();
+	FindSpectrum();	
 }
 
 //Отдает указатель на F
@@ -469,25 +472,48 @@ double* WaveModel::Getf() {
 //сбрасывает настройки
 void WaveModel::Reset()
 {
-	if ((Fpast != NULL)) {
-		delete [] X;
-		delete [] A;
-		delete [] B;
-		delete [] C;
-		delete [] D;
-		delete [] alpha;
-		delete [] betta;
+	
+	//удаление массивов
+	delete[] X;
+	delete[] Y;
+	delete[] f;
 
-		/*for (int i = 0; i < IdMax; i++)
-			delete [] F[i];
-		for (int i = 0; i < N; i++)
-			delete [] FFur[i];
+	for (int i = 0; i < N - 1; i++) {
+		delete[] A[i];
+		delete[] B[i];
+		delete[] C[i];
+		delete[] D[i];
 
-		delete [] F;
-		delete [] FFur;
-		Id = 1;
-		Energes.clear();*/
-	}	
+		delete[] alpha[i];
+		delete[] betta[i];
+	}
+
+	//отсчеты пакета
+	for (int i = 0; i < N; i++) {
+		delete[] Fpast[i];
+		delete[] Fnow[i];
+	}
+
+	for (int k = 0; k < IdMax; k++) {
+		
+		//отсчеты буфера пакета
+		for (int i = 0; i < N; i++) {
+			delete[] FBuf[k][i];
+		}
+		delete[] FBuf[k];
+	}
+
+	delete[] Fpast;
+	delete[] Fnow;
+	delete[] FBuf;
+
+	delete[] A;
+	delete[] B;
+	delete[] C;
+	delete[] D;
+
+	delete[] alpha;
+	delete[] betta;	
 }
 
 //конвертирует из complex в double
@@ -512,9 +538,10 @@ vector<pair<double, int>> WaveModel::GetEnerges(){
 }
 
 //находит собственные функции в конкретном 
-void WaveModel::FindSF(int id) {
+void WaveModel::FindSF(int idx, int idy) {
 	Energes.clear();
-	SFId = id;
+	SFIdx = idx;
+	SFIdy = idy;
 	FindPicks2();
 }
 
