@@ -56,8 +56,9 @@ private:
 		SolidBrush* GetBrush(double val) {
 			for (int i = 0; i < Size - 1; i++) {
 				if ((val >= mas[i]) && (val < mas[i + 1]))
-					return brashes[i];
+					return brashes[i];				
 			}
+			return new SolidBrush(Color::Black);
 		}
 	};
 
@@ -102,7 +103,7 @@ private:
 	vector<Poligon*> poligSF;
 
 	//флаг, отвечающий за создание вектора с полигонами для 2d и 3d
-	bool poligReady = false;
+	bool poligReady = false;	
 
 	//подготавливает данные для отрисовки 2d
 	void PrepareData2d();
@@ -220,4 +221,10 @@ public:
 		if (mod == nullptr)
 			mod = new WaveModel();
 	}
+
+	//функция, ставящая на паузу модель
+	void Pause();
+
+	//флаг, отвечающий за установку паузы
+	bool pause = false;
 };

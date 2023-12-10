@@ -18,6 +18,7 @@ using namespace std;
 
 class WaveModel {
 private:
+	CRITICAL_SECTION *cs;
 	
 	int index = 0;		//индекс итерации
 	int Id = 1023;		//текущий айди времени
@@ -66,8 +67,7 @@ private:
 	
 	vector<pair<double, int>> Energes;	//собственные энергии
 
-	//начальная инициализация алгоритма
-	void InitData();
+	
 
 	//начальный волновыой пакет
 	double F0(double x, double y);
@@ -129,7 +129,8 @@ private:
 	//копирует отсчеты функции на текущем шаге в буфер для предыдущего шага
 	void CopyData();
 public:
-	
+	//начальная инициализация алгоритма
+	void InitData();
 
 	//флаг, отвечающий за готовность произвести фурье
 	bool DataReady = false;

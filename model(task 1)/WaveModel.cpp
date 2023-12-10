@@ -2,10 +2,8 @@
 #include "WaveModel.h"
 
 //нахождение волнового пакета в следующий момент времени
-void WaveModel::FindWave() {
-	InitData();
-	
-	for (;;) {
+void WaveModel::FindWave() {	
+	for (;;) {	
 		index++;
 
 		//первый полушаг
@@ -20,15 +18,13 @@ void WaveModel::FindWave() {
 
 		//копирование данных
 		CopyData();
-		
+
 		//сохранение данных для Фурье
 		if (!(index % (int)Scalefd)) {
 			PutData();
 			index = 0;
-		}
-			
-	}
-	
+		}		
+	}	
 }
 
 //начальная инициализация алгоритма
@@ -386,17 +382,18 @@ void WaveModel::FindPicks() {
 //вторая версия поиска пиков
 void WaveModel::FindPicks2() {
 	int id;
-	double max;
+	double max, maxFirst;
 	FindMax(0, IdMax, max, id);
 	Energes.push_back({ max, id });
 
+	maxFirst = max;
 	max *= 0.05;
 	for (int i = 1; i < 1023; i++) {
 		double left = abs(FBuf[i - 1][SFIdx][SFIdy]);
 		double cent = abs(FBuf[i][SFIdx][SFIdy]);
 		double right = abs(FBuf[i + 1][SFIdx][SFIdy]);
 
-		if ((cent > left) && (cent > right) && (cent>=max)) {
+		if ((cent > left) && (cent > right) && (cent>=max) && (cent != maxFirst)) {
 			Energes.push_back({ cent, i});
 		}
 	}
@@ -472,48 +469,50 @@ double* WaveModel::Getf() {
 //сбрасывает настройки
 void WaveModel::Reset()
 {
-	
-	//удаление массивов
-	delete[] X;
-	delete[] Y;
-	delete[] f;
+	if (X != NULL) {
+		//удаление массивов
+		delete[] X;
+		delete[] Y;
+		delete[] f;
 
-	for (int i = 0; i < N - 1; i++) {
-		delete[] A[i];
-		delete[] B[i];
-		delete[] C[i];
-		delete[] D[i];
+		for (int i = 0; i < N - 1; i++) {
+			delete[] A[i];
+			delete[] B[i];
+			delete[] C[i];
+			delete[] D[i];
 
-		delete[] alpha[i];
-		delete[] betta[i];
-	}
-
-	//отсчеты пакета
-	for (int i = 0; i < N; i++) {
-		delete[] Fpast[i];
-		delete[] Fnow[i];
-	}
-
-	for (int k = 0; k < IdMax; k++) {
-		
-		//отсчеты буфера пакета
-		for (int i = 0; i < N; i++) {
-			delete[] FBuf[k][i];
+			delete[] alpha[i];
+			delete[] betta[i];
 		}
-		delete[] FBuf[k];
+
+		//отсчеты пакета
+		for (int i = 0; i < N; i++) {
+			delete[] Fpast[i];
+			delete[] Fnow[i];
+		}
+
+		for (int k = 0; k < IdMax; k++) {
+
+			//отсчеты буфера пакета
+			for (int i = 0; i < N; i++) {
+				delete[] FBuf[k][i];
+			}
+			delete[] FBuf[k];
+		}
+
+		delete[] Fpast;
+		delete[] Fnow;
+		delete[] FBuf;
+
+		delete[] A;
+		delete[] B;
+		delete[] C;
+		delete[] D;
+
+		delete[] alpha;
+		delete[] betta;
 	}
-
-	delete[] Fpast;
-	delete[] Fnow;
-	delete[] FBuf;
-
-	delete[] A;
-	delete[] B;
-	delete[] C;
-	delete[] D;
-
-	delete[] alpha;
-	delete[] betta;	
+	
 }
 
 //конвертирует из complex в double

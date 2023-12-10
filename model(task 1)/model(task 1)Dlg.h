@@ -47,9 +47,7 @@ public:
 
 	afx_msg void OnEnChangeEdit2();	
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButton2();
-	afx_msg void OnBnClickedButton3();
 	afx_msg void OnBnClickedButton4();
 
 	int n;			//количество точек по оси X
@@ -70,14 +68,26 @@ public:
 	int ID = 0;
 
 	CListBox listModels;
-	afx_msg void OnEnChangeEdit4();
-	
-	afx_msg void OnBnClickedButton5();
-	
-	afx_msg void OnBnClickedButton6();
-	afx_msg void OnBnClickedButton7();
-	
-	Drawer threedgraph;
-	
+	afx_msg void OnBnClickedButton6();	
+	Drawer threedgraph;	
 	double Scalefd;
+	afx_msg void OnBnClickedButton8();
+	afx_msg void OnLbnSelchangeList2();
+	void BtnSwitch(bool flag);
+
+	CEdit btn1;
+	CEdit btn2;
+	CEdit btn3;
+	CEdit btn4;
+	CEdit btn5;
+	CEdit btn6;
+	CEdit btn7;
+	CEdit btn8;
+	CEdit btn9;
+	CEdit btn10;
+	CEdit btn11;
+	CEdit btn12;
+	CEdit btn13;
+	CEdit idxBtn;
+	CEdit idyBtn;
 };

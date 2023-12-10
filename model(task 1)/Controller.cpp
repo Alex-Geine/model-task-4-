@@ -74,6 +74,7 @@ void Controller::FillList(){
 
 //запусткает вычисления
 void Controller::StartSolve() {
+	mod->InitData();
 	TREAD = CreateThread(NULL, NULL, StaticModelFunk, (void*)this, 0, NULL);	
 }
 
@@ -340,7 +341,8 @@ void Controller::PrepareData3d() {
 //подготавливает данные для отрисовки собственных функций
 void Controller::PrepareDataSF() {
 	MaxSF = 0;
-	
+	poligSF.clear();
+
 	Poligon* f;
 	for (int i = 0; i < N - 1; i++) {
 		for (int j = 0; j < M - 1; j++) {
@@ -803,7 +805,11 @@ void Controller::DrawSF(LPDRAWITEMSTRUCT Item1) {
 
 //очищает данные
 void Controller::Clear() {
-	if (TREAD != NULL) {
+	if (mod != nullptr) {
+		//уничтожение потока
+		TerminateThread(TREAD, 0);
+		TREAD = NULL;
+
 		X = nullptr;
 		Y = nullptr;
 		f = nullptr;
@@ -818,15 +824,16 @@ void Controller::Clear() {
 
 		Energes.clear();
 
-		//отчистка данных
-		mod->Reset();
+		polig.clear();
+		poligSF.clear();
 
-		//уничтожение потока
-		TerminateThread(TREAD, 0);
-		TREAD = NULL;
+		//отчистка данных
+		mod->Reset();	
 
 		//удвление модели
 		delete mod;
+
+		mod = nullptr;
 
 		ClearList();
 	}	
@@ -900,4 +907,17 @@ void Controller::CheckData() {
 		mod->FurStart = true;
 		CreateThread(NULL, NULL, StaticModelFurie, (void*)this, 0, NULL);
 	}		
+}
+
+//функция, ставящая на паузу модель
+void Controller::Pause() {
+	if ((!pause) && (mod != nullptr)) {
+		SuspendThread(TREAD);
+		pause = true;
+
+	}
+	else if ((pause) && (mod != nullptr)) {
+		ResumeThread(TREAD);
+		pause = false;
+	}	
 }

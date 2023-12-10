@@ -98,6 +98,21 @@ void Cmodeltask1Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_3D, threedgraph);
 	DDX_Text(pDX, IDC_EDIT14, idy);
 	DDX_Text(pDX, IDC_EDIT15, Scalefd);
+	DDX_Control(pDX, IDC_EDIT1, btn1);
+	DDX_Control(pDX, IDC_EDIT13, btn2);
+	DDX_Control(pDX, IDC_EDIT2, btn3);
+	DDX_Control(pDX, IDC_EDIT5, btn4);
+	DDX_Control(pDX, IDC_EDIT3, btn5);
+	DDX_Control(pDX, IDC_EDIT4, btn6);
+	DDX_Control(pDX, IDC_EDIT6, btn7);
+	DDX_Control(pDX, IDC_EDIT7, btn8);
+	DDX_Control(pDX, IDC_EDIT8, btn9);
+	DDX_Control(pDX, IDC_EDIT12, btn10);
+	DDX_Control(pDX, IDC_EDIT9, btn11);
+	DDX_Control(pDX, IDC_EDIT11, btn12);
+	DDX_Control(pDX, IDC_EDIT15, btn13);
+	DDX_Control(pDX, IDC_EDIT10, idxBtn);
+	DDX_Control(pDX, IDC_EDIT14, idyBtn);
 }
 
 BEGIN_MESSAGE_MAP(Cmodeltask1Dlg, CDialogEx)
@@ -105,15 +120,11 @@ BEGIN_MESSAGE_MAP(Cmodeltask1Dlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_TIMER()
-
-	ON_BN_CLICKED(IDC_BUTTON1, &Cmodeltask1Dlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON2, &Cmodeltask1Dlg::OnBnClickedButton2)
-	ON_BN_CLICKED(IDC_BUTTON3, &Cmodeltask1Dlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON4, &Cmodeltask1Dlg::OnBnClickedButton4)	
-	ON_EN_CHANGE(IDC_EDIT4, &Cmodeltask1Dlg::OnEnChangeEdit4)
-	ON_BN_CLICKED(IDC_BUTTON5, &Cmodeltask1Dlg::OnBnClickedButton5)
 	ON_BN_CLICKED(IDC_BUTTON6, &Cmodeltask1Dlg::OnBnClickedButton6)
-	ON_BN_CLICKED(IDC_BUTTON7, &Cmodeltask1Dlg::OnBnClickedButton7)
+ON_BN_CLICKED(IDC_BUTTON8, &Cmodeltask1Dlg::OnBnClickedButton8)
+ON_LBN_SELCHANGE(IDC_LIST2, &Cmodeltask1Dlg::OnLbnSelchangeList2)
 END_MESSAGE_MAP()
 
 
@@ -237,7 +248,7 @@ void Cmodeltask1Dlg::OnEnChangeEdit2()
 
 void Cmodeltask1Dlg::OnTimer(UINT_PTR nIDEvent)
 {		
-	UpdateData();
+	//UpdateData();
 	
 	control->CheckData();	
 	control->GetData();
@@ -256,32 +267,16 @@ void Cmodeltask1Dlg::OnTimer(UINT_PTR nIDEvent)
 	CDialogEx::OnTimer(nIDEvent);
 }
 
-//окно спектра
-void Cmodeltask1Dlg::OnBnClickedButton1()
-{	
-	phd->ShowWindow(1);
-}
-
-//окно Собственных функций	 
+//окна графиков 
 void Cmodeltask1Dlg::OnBnClickedButton2()
 {
 	por->ShowWindow(1);
+	phd->ShowWindow(1);
 }
 
 void CAboutDlg::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
-}
-
-//Отрисовывает график СФ
-void Cmodeltask1Dlg::OnBnClickedButton3()
-{
-	if (!control->DataReady()) {
-		MessageBox(L"Нет данных!", L"Ошибка!", NULL);
-		return;
-	}
-	control->ShowItemList();
-	por->GetMes();
 }
 
 //Посчитать значения
@@ -302,17 +297,9 @@ void Cmodeltask1Dlg::OnBnClickedButton4()
 	control->StartSolve();
 
 	timer = SetTimer(1, 10, 0);
-}
 
-void Cmodeltask1Dlg::OnEnChangeEdit4()
-{
-}
-
-//Удвлить модель
-void Cmodeltask1Dlg::OnBnClickedButton5()
-{
-	control->Clear();
-		
+	//лочит кнопки
+	BtnSwitch(true);
 }
 
 //нарисовать спектр
@@ -333,11 +320,49 @@ void Cmodeltask1Dlg::OnBnClickedButton6()
 	control->drawIdFx = idx;
 	control->drawIdFy = idy;
 	phd->GetMes();
-}
-
-//пересчитать собственные функции
-void Cmodeltask1Dlg::OnBnClickedButton7()
-{
-	UpdateData();
 	control->GetSF(idx, idy);
 }
+
+//Пауза
+void Cmodeltask1Dlg::OnBnClickedButton8()
+{	
+	if (!control->pause) {
+		KillTimer(timer);
+		control->Pause();
+		BtnSwitch(false);
+	}		
+	else {
+		BtnSwitch(true);
+		control->Pause();
+		timer = SetTimer(1, 10, 0);
+	}
+		
+}
+
+//перерисовывает график с СФ
+void Cmodeltask1Dlg::OnLbnSelchangeList2()
+{
+	if (!control->DataReady()) {
+		MessageBox(L"Нет данных!", L"Ошибка!", NULL);
+		return;
+	}
+	control->ShowItemList();
+	por->GetMes();
+}
+
+void Cmodeltask1Dlg::BtnSwitch(bool flag) {
+	btn1.SetReadOnly(flag);
+	btn2.SetReadOnly(flag);
+	btn3.SetReadOnly(flag);
+	btn4.SetReadOnly(flag);
+	btn5.SetReadOnly(flag);
+	btn6.SetReadOnly(flag);
+	btn7.SetReadOnly(flag);
+	btn8.SetReadOnly(flag);
+	btn9.SetReadOnly(flag);
+	btn10.SetReadOnly(flag);
+	btn11.SetReadOnly(flag);
+	btn12.SetReadOnly(flag);
+	btn13.SetReadOnly(flag);
+}
+
