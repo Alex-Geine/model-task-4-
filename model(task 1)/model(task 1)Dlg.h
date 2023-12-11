@@ -5,8 +5,7 @@
 #pragma once
 #include "Drawer.h"
 #include "Controller.h"
-#include "Phase_D.h"
-#include "Portret.h"
+
 
 
 
@@ -42,12 +41,11 @@ public:
 	MSG msg;
 	Controller* control;
 
-	Phase_D* phd;
-	Portret* por;	
+		
 
 	afx_msg void OnEnChangeEdit2();	
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	afx_msg void OnBnClickedButton2();
+//	afx_msg void OnBnClickedButton2();
 	afx_msg void OnBnClickedButton4();
 
 	int n;			//количество точек по оси X
@@ -90,4 +88,6 @@ public:
 	CEdit btn13;
 	CEdit idxBtn;
 	CEdit idyBtn;
+	Drawer Spectr;
+//	afx_msg void OnBnClickedButton2();
 };

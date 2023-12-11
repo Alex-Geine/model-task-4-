@@ -58,7 +58,7 @@ Cmodeltask1Dlg::Cmodeltask1Dlg(CWnd* pParent /*=nullptr*/)
 
 	, n(100)
 	, dt(0.001)
-	, a(-1)
+	, a(0)
 	, b(1)
 	, R(2)
 	, f0(0.1)
@@ -113,6 +113,7 @@ void Cmodeltask1Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT15, btn13);
 	DDX_Control(pDX, IDC_EDIT10, idxBtn);
 	DDX_Control(pDX, IDC_EDIT14, idyBtn);
+	DDX_Control(pDX, IDC_MAINGRAPH2, Spectr);
 }
 
 BEGIN_MESSAGE_MAP(Cmodeltask1Dlg, CDialogEx)
@@ -120,11 +121,12 @@ BEGIN_MESSAGE_MAP(Cmodeltask1Dlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_TIMER()
-	ON_BN_CLICKED(IDC_BUTTON2, &Cmodeltask1Dlg::OnBnClickedButton2)
+//	ON_BN_CLICKED(IDC_BUTTON2, &Cmodeltask1Dlg::OnBnClickedButton2)
 	ON_BN_CLICKED(IDC_BUTTON4, &Cmodeltask1Dlg::OnBnClickedButton4)	
 	ON_BN_CLICKED(IDC_BUTTON6, &Cmodeltask1Dlg::OnBnClickedButton6)
 ON_BN_CLICKED(IDC_BUTTON8, &Cmodeltask1Dlg::OnBnClickedButton8)
 ON_LBN_SELCHANGE(IDC_LIST2, &Cmodeltask1Dlg::OnLbnSelchangeList2)
+//ON_BN_CLICKED(IDC_BUTTON2, &Cmodeltask1Dlg::OnBnClickedButton2)
 END_MESSAGE_MAP()
 
 
@@ -166,29 +168,15 @@ BOOL Cmodeltask1Dlg::OnInitDialog()
 	MainGraph.GetContr(control);
 	MainGraph.drawerID = 1;
 
-	//график с 3d картинкой
+	//график с собственной функцией
 	threedgraph.GetContr(control);
-	threedgraph.drawerID = 2;
+	threedgraph.drawerID = 3;
 
-	CWnd* m_Parent;
-	m_Parent = GetDesktopWindow();
+	//график с спектром
+	Spectr.GetContr(control);
+	Spectr.drawerID = 2;
 
-	phd = new Phase_D(m_Parent);	
-	phd->Create(IDD_DIALOG1, m_Parent);
-	phd->Phase_Gr.GetContr(control);
-	phd->Phase_Gr.drawerID = 3;
-
-	por = new Portret(m_Parent);
-	por->Create(IDD_DIALOG2, m_Parent);
-	por->PhasePor.GetContr(control);
-	por->PhasePor.drawerID = 4;
-
-	
-
-	control->listEnerges = &listModels;
-	
-	
-	
+	control->listEnerges = &listModels;	
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
 
@@ -255,8 +243,8 @@ void Cmodeltask1Dlg::OnTimer(UINT_PTR nIDEvent)
 	MainGraph.draw = 1;
 	MainGraph.Invalidate(false);
 
-	threedgraph.draw = 1;
-	threedgraph.Invalidate(false);
+	//threedgraph.draw = 1;
+	//threedgraph.Invalidate(false);
 
 	while (PeekMessage(&msg, 0, WM_PAINT, WM_PAINT, PM_REMOVE))
 	{
@@ -268,11 +256,10 @@ void Cmodeltask1Dlg::OnTimer(UINT_PTR nIDEvent)
 }
 
 //окна графиков 
-void Cmodeltask1Dlg::OnBnClickedButton2()
-{
-	por->ShowWindow(1);
-	phd->ShowWindow(1);
-}
+//void Cmodeltask1Dlg::OnBnClickedButton2()
+//{
+//	
+//}
 
 void CAboutDlg::OnPaint()
 {
@@ -284,13 +271,7 @@ void Cmodeltask1Dlg::OnBnClickedButton4()
 {
 	KillTimer(timer);
 	UpdateData();
-
-	//проверки на корректность значений
-	if ((abs(a) > R) || (abs(b) > R)) {
-		MessageBox(L"границы ямы больше чем R", L"Ошибка!", NULL);
-		return;
-	}	
-	
+		
 	control->Clear();
 	control->CreateModel();
 	control->UpdateModel(n, M, dt, a, b, R, f0, U0, gammax, gammay, asrx, asrty, Scalefd);
@@ -313,13 +294,22 @@ void Cmodeltask1Dlg::OnBnClickedButton6()
 	UpdateData();
 
 	if ((idx < 0) || (idx >= n) || (idy < 0) || (idy >= M)) {
-		MessageBox(L"Id вышло за предел количества точек по X", L"Ошибка!", NULL);
+		MessageBox(L"Id вышло за предел количества точек", L"Ошибка!", NULL);
 		return;
 	}
 
 	control->drawIdFx = idx;
 	control->drawIdFy = idy;
-	phd->GetMes();
+	
+	Spectr.draw = 1;
+	Spectr.Invalidate(false);
+
+	while (PeekMessage(&msg, 0, WM_PAINT, WM_PAINT, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
 	control->GetSF(idx, idy);
 }
 
@@ -347,11 +337,19 @@ void Cmodeltask1Dlg::OnLbnSelchangeList2()
 		return;
 	}
 	control->ShowItemList();
-	por->GetMes();
+	
+	threedgraph.draw = 1;
+	threedgraph.Invalidate(false);
+
+	while (PeekMessage(&msg, 0, WM_PAINT, WM_PAINT, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 }
 
 void Cmodeltask1Dlg::BtnSwitch(bool flag) {
-	btn1.SetReadOnly(flag);
+	/*btn1.SetReadOnly(flag);
 	btn2.SetReadOnly(flag);
 	btn3.SetReadOnly(flag);
 	btn4.SetReadOnly(flag);
@@ -363,6 +361,7 @@ void Cmodeltask1Dlg::BtnSwitch(bool flag) {
 	btn10.SetReadOnly(flag);
 	btn11.SetReadOnly(flag);
 	btn12.SetReadOnly(flag);
-	btn13.SetReadOnly(flag);
+	btn13.SetReadOnly(flag);*/
 }
+
 

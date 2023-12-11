@@ -44,7 +44,7 @@ private:
 		aSry,	//среднее значение пложения частицы по оси Y
 		gammax, //среднеквадратическое отклонение частицы, задающее меру неопределенности ее положения по оси Х
 		gammay,	//среднеквадратическое отклонение частицы, задающее меру неопределенности ее положения по оси Y
-		koef = 10000;
+		koef = -0.00003;	//коэффициент для кулоновского потенциала
 
 	//KOEF
 	complex<double>
@@ -94,7 +94,7 @@ private:
 	void BackwardMethod2();
 
 	//Быстрое Фурье
-	bool  FFT(int Ft_Flag, complex<double>* data);
+	bool FFT(int Ft_Flag, complex<double>* data);
 
 	//нахождение всех спектров
 	void FindSpectrum();
