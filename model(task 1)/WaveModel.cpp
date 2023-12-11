@@ -116,10 +116,10 @@ double WaveModel::F0(double x, double y) {
 
 //функция потенциальной энергии
 double WaveModel::U(double x, double y) {
-	if ( ((x <= a) && (x >= -a)) || ((y <= b) && (y >= -b)))
-		return 0;
-	else
-		return U0;
+	//U = a / (r + dr), dr - смешение от цетра
+
+	double r = sqrt(x * x + y * y);
+	return U0 / (r + a + 0.001) + U0 / (r + b + 0.001);
 }
 
 //нахождение второй производной от функции F по X	(flag - производная считается на первом полушаге(true), или на втором(false))
@@ -554,7 +554,7 @@ bool WaveModel::PutData() {
 				FBuf[Id][i][j] = Fpast[i][j];
 		Id--;
 		if (Id == 0) {
-			MessageBox(NULL,L"Данные для фурье готовы! Запуск нахождения спектра...", L"", NULL);
+			MessageBox(NULL,L"Рассчет спектра", L"", NULL);
 			DataReady = true;
 			return 1;
 		}

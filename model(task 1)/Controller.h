@@ -96,20 +96,17 @@ private:
 	double* Y = NULL;		//вектор значений по Y
 	double* f = NULL;		//вектор значений по f
 
-	//вектор со всеми полигонами для 2d и 3d
+	//вектор со всеми полигонами для 2d
 	vector<Poligon*> polig;
 
 	//вектор со всеми полигонами для собственных функций
 	vector<Poligon*> poligSF;
 
-	//флаг, отвечающий за создание вектора с полигонами для 2d и 3d
+	//флаг, отвечающий за создание вектора с полигонами для 2d
 	bool poligReady = false;	
 
 	//подготавливает данные для отрисовки 2d
-	void PrepareData2d();
-
-	//подготавливает данные для отрисовки 3d
-	void PrepareData3d();
+	void PrepareData2d();	
 
 	//подготавливает данные для отрисовки собственных функций
 	void PrepareDataSF();
@@ -177,9 +174,6 @@ public:
 	
 	//запускает отрисовку 2d графика
 	void DrawMainGr(LPDRAWITEMSTRUCT Item1);
-
-	//отрисовывает 3d график
-	void Draw3D(LPDRAWITEMSTRUCT Item1);
 
 	//отрисовывает спектр
 	void DrawSpectrum(LPDRAWITEMSTRUCT Item1);
